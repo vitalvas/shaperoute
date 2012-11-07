@@ -1,4 +1,4 @@
-$def with (input, error, channel, grps)
+$def with (input, error, channel, grps, channels)
 
 $if error:
     <p>Invalid input.</p>
@@ -8,13 +8,9 @@ $if error:
 <table class="formtable">
         <tr>
                 <td align='right'>User name:</td>
-                        <td><INPUT name="username" disabled="disabled" value="$input.get('username')"/>
+                        <td><INPUT name="realname" value="$input.get('realname')"/>
                             <INPUT name="id" value="$input.get('id')" type="hidden" />
                         <a href="/removeuser?id=$input.get('id')"><img src="/static/icons/user_delete.png" title="Remove user"/></a></td>
-        </tr>
-        <tr>
-                <td align='right'>Real name:</td>
-                <td><INPUT name="realname" value="$input.get('realname')"/></td>
         </tr>
         <tr>
                 <td align='right'>Location:</td>
@@ -52,20 +48,23 @@ $if error:
 		</select>
 		</td>
 	</tr>
-        <tr>
+	<tr>
                 <td align='right'>Channel:</td>
                 <td>
+            	    $if channels > 1:
                         <SELECT name="channel">
-                        $for c in channel:
-                            $if input.get('channel') == c.id:
-                                <OPTION selected value="$c.id">$c.name</OPTION>
-                            $else:
-                                <OPTION value="$c.id">$c.name</OPTION>
+                    $else:
+                	<SELECT style="display:none;" name="channel">
+                    $for c in channel:
+                        $if input.get('channel') == c.id:
+                            <OPTION selected value="$c.id">$c.name</OPTION>
+                        $else:
+                            <OPTION value="$c.id">$c.name</OPTION>
                         </SELECT><br/>
-                        <INPUT name="bw_down" value="$input.get('bw_down')" size="6"/>Kbit IN &darr; (0 - Unlim)<br/>
-                        <INPUT name="bw_up" value="$input.get('bw_up')" size="6"/>Kbit OUT &uarr; (0 - Unlim)
+            	    <INPUT name="bw_down" value="$input.get('bw_down')" size="6"/>Kbit IN &darr; (0 - Unlim)<br/>
+            	    <INPUT name="bw_up" value="$input.get('bw_up')" size="6"/>Kbit OUT &uarr; (0 - Unlim)
                 </td>
-        </tr>
+	</tr>
         <tr>
                 <td align='right' colspan=2><INPUT type='submit' value="Submit">
                 </td>

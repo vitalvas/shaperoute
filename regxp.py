@@ -23,10 +23,7 @@ def hwaddrp(s):
     if re.match(mac_regex, s):
 	return True
     else:
-	if s == '' or s == ' ':
-	    return True
-	else:
-	    return False
+	return False
 
 def usernamep(s):
 #    s=s.strip()

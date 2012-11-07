@@ -8,7 +8,7 @@ import datetime, time
 from settings import *
 from regxp import *
 
-web.config.debug=False
+#web.config.debug=False
 
 urls = (
 	'/', 'index',
@@ -301,21 +301,15 @@ class AddUserPage:
 	    try:
 		if not ipaddrp(user.ipaddr):
 		    raise ValueError
-		user_name = user.get('username')
 		user_ip = user.get('ipaddr')
 		user_mac = user.get('hwaddr')
-		if not user_name:
-		    user_name = user_ip.replace('.','')
-		if user_mac == '':
+		if hwaddrp(user_mac) is False:
 		    user_mac = '00:00:00:00:00:00'
-		qq = db.select('users', what='COUNT(id) AS num', where='username=$user_name OR ip=$user_ip', vars=locals() )
-		for c in qq:
-		    cnts = c.num
-		if cnts !=0:
+		qq = db.select('users', what='COUNT(id) AS num', where='ip=$user_ip', vars=locals() )[0]
+		if qq.num !=0:
 		    raise ValueError;
 		else:
 		    db.insert('users',
-				username=user_name,
 				realname=user.get('realname', ''),
 				groups=int(user.get('grps', '')),
 				ip=user_ip,
@@ -325,6 +319,7 @@ class AddUserPage:
 				bw_down=int(user.get('bw_down', ''))
 			    )
 		    config_dhcp()
+		    config_static_arp()
 		    web.redirect('/users')
 	    except ValueError:
 		return self.show(user, True)
@@ -388,8 +383,10 @@ class EditUserPage:
 	else:
 	    channels = db.select('channels', what='id,name', where="active=true", vars=locals())
 	    grps = db.select('users_grp', what='id,name', where="active=true", vars=locals())
+	    count_channels = db.query("SELECT COUNT(*) AS total FROM channels")[0]
+	    count_channels = count_channels.total
 	    userid = int(web.input().get("id"))
-	    return render.main('Edit user', render.edituser(input, error, channels, grps), session)
+	    return render.main('Edit user', render.edituser(input, error, channels, grps, count_channels), session)
 
     def GET(self):
 	if not session.loggedin:
@@ -405,12 +402,12 @@ class EditUserPage:
 	else:
 	    user = web.input()
 	    try:
+		mac_addr = user.mac
+		if hwaddrp(mac_addr) is False:
+		    mac_addr = '00:00:00:00:00:00'
 		if not ipaddrp(user.get('ip','')):
 		    raise ValueError
-		usern = user.get('ip','')
-		usern = usern.replace('.','')
 		db.update('users', where='id=$user.id', 
-			    username=usern,
 			    realname=user.realname,
 			    groups=int(user.grps),
 			    ip=user.ip,

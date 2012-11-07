@@ -7,7 +7,6 @@ DB_NAME="shaperoute"
 
 pipe_start=100
 
-dhcp_tpl="/usr/shaperoute/syscfg/dhcpd_sys.conf"
 dhcp_conf="/usr/shaperoute/syscfg/dhcpd_users.conf"
 dhcp_reset="/usr/local/etc/rc.d/isc-dhcpd restart"
 
