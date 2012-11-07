@@ -1,0 +1,71 @@
+$def with (users, groups, trn, hash, cnt)
+<table class="usertable">
+	<thead>
+		<tr>
+			<th>
+			$if trn == 33:
+			    <!--<a href="/activateuser?id=0&act=77&hash=$hash"><img src="/static/icons/deactivated.png" title="Set offline from all"></a>-->
+			$else:
+			    <!--<a href="/activateuser?id=0&act=88&hash=$hash"><img src="/static/icons/online.png" title="Set online from all"></a>-->
+			</th>
+			<td bgcolor="#D0DCE0"><tt><b><center>Real name</center></b></tt></td>
+			<td bgcolor="#D0DCE0"><tt><b><center>Group</center></b></tt></td>
+			<td bgcolor="#D0DCE0"><tt><b><center>User name</center></b></tt></td>
+			<td bgcolor="#D0DCE0"><tt><b><center>IP address</center></b></tt></td>
+			<td bgcolor="#D0DCE0"><tt><b><center>MAC address</center></b></tt></td>
+			<td bgcolor="#D0DCE0"><tt><b><center>Channel</center></b></tt></td>
+			<td bgcolor="#D0DCE0"><tt><b><center>Speed IN</center></b></tt></td>
+			<td bgcolor="#D0DCE0"><tt><b><center>Speed Out</center></b></tt></td>
+			<th style="text-align: left; padding-left:5;"> <a href="/adduser"><img src='/static/icons/add.png' alt='+' title='Add user'/></a></th>
+		</tr>
+	</thead>
+	<tbody>
+		$for user in users:
+			$if user.active == 'false':
+			    <tr id="$user.id" bgcolor="#FFE6E6" class="userrow inactiverow">
+			    <td>
+			    <a href="/activateuser?id=$user.id&act=1&hash=$hash+$user.id"><tt><img src="/static/icons/deactivated.png" alt="x" title="Deactivated"></tt></a>
+			    </td>
+			$elif user.active == 'true' and user.limit_sites == 'false':
+			    <tr id="$user.id" class="userrow inactiverow">
+			    <td>
+			    <a href="/activateuser?id=$user.id&act=2&hash=$hash+$user.id"><tt><img src="/static/icons/online.png" alt="x" title="Online"></tt></a>
+			    </td>
+			$else:
+			    <tr id="$user.id" class="userrow inactiverow">
+			    <td>
+			    <a href="/activateuser?id=$user.id&act=2&hash=$hash+$user.id"><tt><img src="/static/icons/offline.png" alt="x" title="Online"></tt></a>
+			    </td>
+			
+			<td>$user.realname</td>
+			<td>$user.grp</td>
+			<td><img src='/static/icons/user.png'/> <tt>$user.username</tt></td>
+			<td><tt>$user.ip</tt></td>
+			<td>$user.mac</td>
+			<td>$user.channel</td>
+			$if user.bw_down == 0:
+			    <td>Unlim</td>
+			$else:
+			    <td>$user.bw_down</td>
+			$if user.bw_up == 0:
+			    <td>Unlim</td>
+			$else:
+			    <td>$user.bw_up</td>
+			<td>
+			<a href="/edituser?id=$user.id"><img src='/static/icons/wrench.png' alt='E' title='Edit'/></a></td>
+			</tr>
+	</tbody>
+	    <tr>
+		<th></th>
+		<td><tt>Count users:</tt></td>
+		<td><tt>$cnt</tt></td>
+		<th></th>
+		<th></th>
+		<th></th>
+		<th></th>
+		<th></th>
+		<th></th>
+	    </tr>
+	<tfoot>
+	</tfoot>
+</table>

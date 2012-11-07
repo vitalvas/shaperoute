@@ -1,0 +1,3 @@
+
+cd /usr/ports/www/webpy && make install clean
+cd /usr/ports/databases/py-MySQLdb && make install clean

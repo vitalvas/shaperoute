@@ -1,0 +1,1 @@
+*/1	*	*	*	*	root	/usr/shaperoute/cron/arpenable.sh

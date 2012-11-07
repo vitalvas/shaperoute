@@ -1,0 +1,17 @@
+$def with (cn)
+<table class="usertable">
+	<thead>
+		<tr>
+			<td bgcolor="#D0DCE0"><tt><b><center>Name</center></b></tt></td>
+			<td bgcolor="#D0DCE0"><tt><b><center>Active</center></b></tt></td>
+		</tr>
+	</thead>
+	<tbody>
+	    $for chan in cn:
+			<tr id="$chan.id" class="userrow inactiverow">
+			<td>$chan.name</td>
+			<td>$chan.active</td>
+	</tbody>
+	<tfoot>
+	</tfoot>
+</table>

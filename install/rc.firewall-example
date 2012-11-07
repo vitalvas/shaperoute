@@ -1,0 +1,46 @@
+#!/bin/sh -
+
+f='/sbin/ipfw -q'
+
+
+${f} -f flush
+
+${f} add 100 allow tcp from any to me dst-port 22
+${f} add 105 allow tcp from any to me dst-port 80
+${f} add 110 allow udp from any to me dst-port 53
+${f} add 115 allow udp from any to me dst-port 67
+${f} add 130 allow icmp from any to me in icmptypes 0,8
+${f} add 200 check-state
+${f} add 220 allow ip from me to any keep-state
+
+${f} add 250 allow ip from any to any via rl0
+${f} add 251 allow ip from any to any via ste0
+
+# Users -> UkrTeleCom
+#${f} add 300 setfib 0 ip from "table(5)" to any
+#${f} add 302 skipto 500 ip from "table(5)" to any
+# UkrTeleCom -> Users
+#${f} add 304 setfib 0 ip from any to "table(5)"
+#${f} add 306 skipto 600 ip from any to "table(5)"
+#${f} add 308 setfib 0 ip from any to me in recv rl0
+
+
+# Users -> MirTV
+#${f} add 310 setfib 1 ip from "table(10)" to any
+#${f} add 312 skipto 500 ip from "table(10)" to any
+# MirTV -> Users
+#${f} add 314 setfib 1 ip from any to "table(10)"
+#${f} add 316 skipto 600 ip from any to "table(10)"
+# MirTV -> Users local routes
+#${f} add 318 setfib 1 ip from any to me in recv ste0
+
+
+# Shape Users -> Mir
+${f} add 510 pipe tablearg ip from "table(0)" to any
+${f} add 590 deny ip from any to any
+# Shape Mir -> Users
+${f} add 610 pipe tablearg ip from any to "table(1)"
+${f} add 690 deny ip from any to any
+# Local Deny Page
+#${f} add 600 fwd 127.0.0.1,8922 tcp from not "table(0)" to any in dst-port 80,443
+

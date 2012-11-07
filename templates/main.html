@@ -1,0 +1,44 @@
+$def with (title, page, session)
+
+<html>
+    <head>
+	<title>Shape - $title</title>
+	<link rel="stylesheet" type="text/css" charset="utf-8" media="all" href="/static/style.css">
+	<script type="text/javascript" src="/static/jquery.js"></script>
+	<script type="text/javascript" src="/static/ui.js"></script>
+    </head>
+    <body>
+    <div id="topbar">
+	$if session.username != "":
+	    <a class="button" href="/users"> <img src="/static/icons/table.png"> Users table</a>
+	    <span class="dropdown">
+		<span class="note" style="top: 18px;">
+		    <a class="item" href="/syscmd/reinit">Apply</a>
+		$if session.acl == "true":
+		    <a class="item" href="/syscmd/reboot">Reboot</a>
+		    <a class="item" href="/syscmd/halt"><img src='/static/icons/server_error.png'> Shutdown</a></a>
+		</span>
+		<a class="button" href="#"> <img src="/static/icons/wrench.png"> Commands</a>
+	    </span>
+	    $if session.acl == "true":
+		<a class="button" href="/grps"><img src="/static/icons/table.png"> Groups</a>
+		<a class="button" href="/channels"><img src="/static/icons/table.png"> Channels</a>
+	    <div style="float:right;">
+	    User: $session.realname <a class="button" href="/login?out=1"> <img src='/static/icons/door_out.png'> Logout</a>
+	    </div>
+	$else:
+	    <a class="button" href="/login"> <img src='/static/icons/door_in.png'> Login</a>
+	    <a class="button" href="/stats"> <img src='/static/icons/information.png'> Stats</a>
+    </div>
+    <h1>$title</h1>
+    <div id="pagebody">
+	$:page
+    </div>
+    <div id="footer">
+	Shape 0.2 | powered by Python and web.py | (c) vitalvas
+    </div>
+    </body>
+</html>
+
+
+

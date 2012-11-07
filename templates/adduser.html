@@ -1,0 +1,53 @@
+$def with (input, errors, channels, grp)
+
+$if errors:
+	<p>Invalid input.
+
+<form method="POST">
+<table class="formtable">
+	<tr>
+		<td align='right'>User name:</td>
+			<td><INPUT name="username" disabled="disabled" value="$input.get('username')"/> (a..z, A..Z, 0..9)</td>
+	</tr>
+	<tr>
+		<td align='right'>Real name:</td>
+		<td><INPUT name="realname" value="$input.get('realname')"/></td>
+	</tr>
+	<tr>
+		<td align='right'>Location:</td>
+		<td><SELECT name="grps">
+		    $for b in grp:
+			$if input.get('grps') == b.id:
+			    <OPTION selected value="$b.id">$b.name</OPTION>
+			$else:
+			    <OPTION value="$b.id">$b.name</OPTION>
+		    </SELECT>
+	</td>
+	<tr>
+		<td align='right'>IP address:</td>
+		<td><INPUT name="ipaddr" value="$input.get('ipaddr')" maxlength="15"/></td>
+	</tr> 
+	<tr>
+		<td align='right'>MAC address:</td>
+		<td><INPUT name="hwaddr" value="$input.get('hwaddr')" maxlength="17"/> (00:00:00:00:00:00)</td>
+	</tr>
+	<tr>
+		<td align='right'>Channel:</td>
+		<td>
+			<SELECT name="channel">
+			$for c in channels:
+			    $if input.get('channel') == c.id:
+				<OPTION selected value="$c.id">$c.name</OPTION>
+			    $else:
+				<OPTION value="$c.id">$c.name</OPTION>
+			</SELECT><br/>
+			<INPUT name="bw_down" value="$input.get('bw_down')" size="6"/>Kbit IN &darr; (0 - Unlim)<br/>
+			<INPUT name="bw_up" value="$input.get('bw_up')" size="6"/>Kbit OUT &uarr; (0 - Unlim)
+		</td>
+	</tr>
+	<tr>
+		<td align='center' colspan=2><INPUT type='submit' value="Submit">
+		</td>
+	</tr>
+</TABLE>
+</FORM>
