@@ -6,27 +6,33 @@ uplinks='bce0 vlan20'
 
 ${f} -f flush
 
-${f} add 100 allow tcp from any to me dst-port 22,80
-${f} add 110 allow udp from any to me dst-port 53,67,68
+for port in 22 80
+do
+    ${f} add 100 allow tcp from any to me $port
+    ${f} add 100 allow tcp from me $port to any
+done
+
+for port in 53 67 68 161
+do 
+    ${f} add 110 allow udp from any to me $port
+    ${f} add 110 allow udp from me $port to any
+done
+
 ${f} add 200 deny icmp from any to any in icmptype 5,9,13,14,15,16,17
 
 #${f} add 250 fwd 127.0.0.1,9002 tcp from not "table(12)" to any in dst-port 80
 
-${f} add 300 check-state
-${f} add 310 allow ip from me to any keep-state
-
-
-${f} add 395 allow ip from any to any via lo0
-for link in uplinks
+for link in ${uplinks} lo0
 do
     ${f} add 400 allow ip from any to any via $link
 done
 
 
 # Shape Users -> Mir
-${f} add 6300 pipe tablearg ip from "table(12)" to any
-${f} add 6390 deny ip from not "table(12)" to any
+${f} add 6300 pipe tablearg ip from "table(0)" to any
+#${f} add 6390 deny ip from not "table(0)" to any
 # Shape Mir -> Users
-${f} add 6400 pipe tablearg ip from any to "table(13)"
-${f} add 6490 deny ip from any to not "table(13)"
+${f} add 6400 pipe tablearg ip from any to "table(0)"
+#${f} add 6490 deny ip from any to not "table(0)"
 
+${f} add allow ip from any to any

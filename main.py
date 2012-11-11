@@ -8,7 +8,7 @@ import datetime, time
 from settings import *
 from regxp import *
 
-#web.config.debug=False
+web.config.debug=False
 
 urls = (
 	'/', 'index',
@@ -39,9 +39,6 @@ else:
 
 db = web.database(dbn='mysql', db=DB_NAME, user=DB_USER, pw=DB_PASS, host=DB_HOST)
 
-os.system("/usr/bin/touch ses_tmp/tmp")
-os.system("/bin/rm ses_tmp/*")
-
 def pipe(num, speed):
     num = int(num)
     speed = int(speed)
@@ -52,18 +49,18 @@ def pipe(num, speed):
 	os.system("/sbin/ipfw pipe %(num)s config bw %(speed)sMbit/s" % locals())
 
 def ipfw_flush():
+    print 'Flushing ipfw pipes'
     os.system("/sbin/ipfw -q -f pipe flush")
+    print 'Flushing ipfw queue'
     os.system("/sbin/ipfw -q -f queue flush")
-
-def ipfw_tbs_flush():
-    os.system("/sbin/ipfw -q table 12 flush")
-    os.system("/sbin/ipfw -q table 13 flush")
-#    os.system("/sbin/ipfw -q table 2 flush")
-#    os.system("/sbin/ipfw -q table 3 flush")
+    print 'Flushing ipfw tables'
+    os.system("/sbin/ipfw -q table 0 flush")
+    os.system("/sbin/ipfw -q table 1 flush")
 
 
 def config_pipes():
-    pipes=pipe_start
+    print 'Create pipes numbers'
+    pipes=100
     db.query("TRUNCATE TABLE pipes")
     users = db.select('users', what='id,ip,bw_up,bw_down', vars=locals())
     for u in users:
@@ -81,6 +78,7 @@ def config_pipes():
 
 
 def config_speed():
+    print 'Configure ipfw pipes'
     perm_users = db.select('users', what='id,ip', where='active=true')
     for u in perm_users:
 	ip = u.ip
@@ -89,81 +87,56 @@ def config_speed():
 	speeds = db.select('pipes', what='pipe_in,pipe_out', where="user='$ids'", vars=locals())[0]
 	speed_in = speeds.pipe_in
 	speed_out = speeds.pipe_out
-	os.system("/sbin/ipfw -q table 12 add %(ip)s %(speed_out)d"  % locals()) # upload
-	os.system("/sbin/ipfw -q table 13 add %(ip)s %(speed_in)d" % locals()) # download
+	os.system("/sbin/ipfw -q table 0 add %(ip)s %(speed_out)d"  % locals()) # upload
+	os.system("/sbin/ipfw -q table 1 add %(ip)s %(speed_in)d" % locals()) # download
 
 
 def config_tables():
-    channels = db.select('channels', where='active=true', vars=locals())
-    for cn in channels:
-	ids=int(cn.id)
-	table=(cn.table)
-	if ids and table:
-	    os.system("/sbin/ipfw -q table %(table)s flush" % locals())
-	    users = db.select('users', what='ip', where="channel='$ids'", vars=locals())
-	    for usr in users:
-		ip=usr.ip
-		if ip:
-		    os.system("/sbin/ipfw -q table %(table)s add %(ip)s" % locals())
-
-
-def config_reject_sites():
-    sites = db.select('sites', where='status=true', vars=locals())
-    for s in sites:
-	network=s.network
-	os.system("/sbin/ipfw -q table 2 add %(network)s" % locals())
-
-
-def config_users_sites():
-    users = db.select('users', where='limit_sites=true', vars=locals())
-    for usr in users:
-	ip=usr.ip
-	os.system("/sbin/ipfw -q table 3 add %(ip)s" % locals())
-
+    print 'Configure ipfw table routes'
+    maps = db.select('channels', what='COUNT(*) as num', where='active=true', vars=locals())[0]
+    if maps.num > 1:
+	channels = db.select('channels', where='active=true', vars=locals())
+	for cn in channels:
+	    ids=int(cn.id)
+	    table=(cn.table)
+	    if ids and table:
+		os.system("/sbin/ipfw -q table %(table)s flush" % locals())
+		users = db.select('users', what='ip', where="channel='$ids'", vars=locals())
+		for usr in users:
+		    ip=usr.ip
+		    if ip:
+			os.system("/sbin/ipfw -q table %(table)s add %(ip)s" % locals())
+    else:
+	print 'Channels count < 2. Map not configured'
 
 def config_static_arp():
-    users = db.select('users', what='ip,mac', where="mac!='' and mac!='00:00:00:00:00:00'", vars=locals())
-    conf = open(arp_conf, "wt")
-    for user in users:
-	ip = user.ip
-	mac = user.mac
-	print >> conf, "%(ip)s %(mac)s" % locals()
-    conf.close()
-    os.system("arp -ad" % locals())
-    os.system("arp -f %(arp_conf)s" % globals())
+    if config['arp']['enable'] is True:
+	print 'Configure static arp'
+	users = db.select('users', what='ip,mac', where="mac!='' and mac!='00:00:00:00:00:00'", vars=locals())
+	conf = open(config['arp']['conf'], "wt")
+	for user in users:
+	    print >> conf, "%(ip)s %(mac)s" % {'ip':user.ip,'mac':user.mac}
+	conf.close()
+	os.system(config['arp']['reload'])
 
 
 def config_dhcp():
-    users = db.select('users', what='id,ip,mac', where="mac!='' and mac!='00:00:00:00:00:00'", vars=locals())
-    config = []
-    conf = open(dhcp_conf, "wt")
-    for user in users:
-	ip = user.ip
-	mac = user.mac
-	username = user.id
-	print >> conf, "host %(username)s { fixed-address %(ip)s; hardware ethernet %(mac)s; }" % locals()
-    conf.close()
-    os.system(dhcp_reset)
+    if config['dhcp']['enable'] is True:
+	print 'Configure DHCP'
+	users = db.select('users', what='id,ip,mac', where="mac!='' and mac!='00:00:00:00:00:00'", vars=locals())
+	conf = open(config['dhcp']['conf'], "wt")
+	for user in users:
+	    print >> conf, "host %(id)s { fixed-address %(ip)s; hardware ethernet %(mac)s; }" % {'id':user.id,'ip':user.ip,'mac':user.mac}
+	conf.close()
+	os.system(config['dhcp']['reload'])
 
 def reconfig():
-    print 'Flushing ipfw pipes and queues'
     ipfw_flush()
-    print 'Configure pipes'
     config_pipes()
-    print 'Fludhing ipfw tables'
-    ipfw_tbs_flush()
-    print 'Configure ipfw pipes'
     config_speed()
-    print 'Configure ipfw tables'
     config_tables()
-#    print 'Configure ipfw reject networks'
-#    config_reject_sites()
-#    print 'Configure ipfw users to reject networks'
-#    config_users_sites()
-#    print 'Configure dhcp'
-#    config_dhcp()
-#    print 'Configure static arp'
-#    config_static_arp()
+    config_dhcp()
+    config_static_arp()
     print 'Started'
 
 
@@ -233,21 +206,21 @@ class ActivatePage:
 			    sp = db.select('pipes', what='pipe_in,pipe_out', where='user=$userid', limit='1', vars=locals())[0]
 			    sp_in = sp.pipe_in
 			    sp_out = sp.pipe_out
-			    os.system("/sbin/ipfw -q table 12 add %(ip)s %(sp_out)d" % locals())
-			    os.system("/sbin/ipfw -q table 13 add %(ip)s %(sp_in)d" % locals())
+			    os.system("/sbin/ipfw -q table 0 add %(ip)s %(sp_out)d" % locals())
+			    os.system("/sbin/ipfw -q table 1 add %(ip)s %(sp_in)d" % locals())
 			else:
 			    reconfig()
 		    if act == 2:
 			db.update('users', where='id=$userid', active='false', vars=locals())
 			ips = db.select('users', what='ip', where='id=$userid', limit='1', vars=locals())[0]
 			ip = ips.ip
-			os.system("/sbin/ipfw -q table 12 delete %(ip)s" % locals())
-			os.system("/sbin/ipfw -q table 13 delete %(ip)s" % locals())
+			os.system("/sbin/ipfw -q table 0 delete %(ip)s" % locals())
+			os.system("/sbin/ipfw -q table 1 delete %(ip)s" % locals())
 		else:
 		    if act == 77:
 			qq = db.query("UPDATE users SET active='false'")
-			os.system("/sbin/ipfw -q table 12 flush")
-			os.system("/sbin/ipfw -q table 13 flush")
+			os.system("/sbin/ipfw -q table 0 flush")
+			os.system("/sbin/ipfw -q table 1 flush")
 		    if act == 88:
 			qq = db.query("UPDATE users SET active='true'")
 			ips = db.select('users', what='id,ip')
@@ -260,8 +233,8 @@ class ActivatePage:
 				sp = db.select('pipes', what='pipe_in,pipe_out', where='user=$ids', limit='1', vars=locals())[0]
 				sp_in = sp.pipe_in
 				sp_out = sp.pipe_out
-				os.system("/sbin/ipfw -q table 12 add %(ip)s %(sp_out)d" % locals())
-				os.system("/sbin/ipfw -q table 13 add %(ip)s %(sp_out)d" % locals())
+				os.system("/sbin/ipfw -q table 0 add %(ip)s %(sp_out)d" % locals())
+				os.system("/sbin/ipfw -q table 1 add %(ip)s %(sp_out)d" % locals())
 			    else:
 				reconfig()
 	    finally:
@@ -470,9 +443,8 @@ class RemoveUserPage:
 		    ip = user.ip
 		    db.delete('users', where="id=$userid", vars=locals())
 		    db.delete('pipes', where='user=$userid', vars=locals())
-		    os.system("/sbin/ipfw -q table 12 delete %(ip)s" % locals())
-		    os.system("/sbin/ipfw -q table 13 delete %(ip)s" % locals())
-#		    reconfig()
+		    os.system("/sbin/ipfw -q table 0 delete %(ip)s" % locals())
+		    os.system("/sbin/ipfw -q table 1 delete %(ip)s" % locals())
 		finally:
 		    web.redirect('/')
 

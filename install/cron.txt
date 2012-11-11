@@ -1,1 +1,2 @@
 */1	*	*	*	*	root	/usr/shaperoute/cron/arpenable.sh
+*	*/1	*	*	*	root	/usr/shaperoute/cron/clearstore.sh
