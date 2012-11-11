@@ -81,14 +81,10 @@ def config_speed():
     print 'Configure ipfw pipes'
     perm_users = db.select('users', what='id,ip', where='active=true')
     for u in perm_users:
-	ip = u.ip
-	ids = u.id
-	ids = int(ids)
+	ids = int(u.id)
 	speeds = db.select('pipes', what='pipe_in,pipe_out', where="user='$ids'", vars=locals())[0]
-	speed_in = speeds.pipe_in
-	speed_out = speeds.pipe_out
-	os.system("/sbin/ipfw -q table 0 add %(ip)s %(speed_out)d"  % locals()) # upload
-	os.system("/sbin/ipfw -q table 1 add %(ip)s %(speed_in)d" % locals()) # download
+	os.system("/sbin/ipfw -q table 0 add %(ip)s %(speed_out)d"  % {'speed_out':speeds.pipe_out,'ip':u.ip} ) # upload
+	os.system("/sbin/ipfw -q table 1 add %(ip)s %(speed_in)d" % {'speed_in':speeds.pipe_in, 'ip':u.ip}) # download
 
 
 def config_tables():
@@ -151,7 +147,6 @@ web.config.session_parameters['ignore_change_ip'] = False
 web.config.session_parameters['secret_key'] = '$1Aiq35(B*$23D73&%'
 web.config.session_parameters['expired_message'] = render.exp_session()
 
-
 class Icon:
     def GET(self):
 	web.redirect('/static/icons/user.png')
@@ -195,48 +190,26 @@ class ActivatePage:
 	    userid = int(web.input().get("id"))
 	    act = int(web.input().get("act"))
 	    try:
-		if userid != 0:
+		if userid:
 		    if act == 1:
 			db.update('users', where='id=$userid', active='true', vars=locals())
 			ips = db.select('users', what='ip', where='id=$userid', limit='1', vars=locals())[0]
-			ip = ips.ip
 			sps = db.select('pipes', what='COUNT(id) AS num', where='user=$userid', limit='1', vars=locals())[0]
-			cnt = sps.num
-			if cnt == 1:
+			if sps.num == 1:
 			    sp = db.select('pipes', what='pipe_in,pipe_out', where='user=$userid', limit='1', vars=locals())[0]
-			    sp_in = sp.pipe_in
-			    sp_out = sp.pipe_out
-			    os.system("/sbin/ipfw -q table 0 add %(ip)s %(sp_out)d" % locals())
-			    os.system("/sbin/ipfw -q table 1 add %(ip)s %(sp_in)d" % locals())
+			    os.system("/sbin/ipfw -q table 0 add %(ip)s %(sp_out)d" % {'ip':ips.ip, 'sp_out':sp.pipe_out})
+			    os.system("/sbin/ipfw -q table 1 add %(ip)s %(sp_in)d" % {'ip':ips.ip, 'sp_in':sp.pipe_in})
 			else:
 			    reconfig()
 		    if act == 2:
 			db.update('users', where='id=$userid', active='false', vars=locals())
 			ips = db.select('users', what='ip', where='id=$userid', limit='1', vars=locals())[0]
-			ip = ips.ip
-			os.system("/sbin/ipfw -q table 0 delete %(ip)s" % locals())
-			os.system("/sbin/ipfw -q table 1 delete %(ip)s" % locals())
+			os.system("/sbin/ipfw -q table 0 delete %s" % ips.ip)
+			os.system("/sbin/ipfw -q table 1 delete %s" % ips.ip)
 		else:
-		    if act == 77:
-			qq = db.query("UPDATE users SET active='false'")
-			os.system("/sbin/ipfw -q table 0 flush")
-			os.system("/sbin/ipfw -q table 1 flush")
-		    if act == 88:
-			qq = db.query("UPDATE users SET active='true'")
-			ips = db.select('users', what='id,ip')
-			for c in ips:
-			    ip = c.ip
-			    ids = c.ip
-			    sps = db.select('pipes', what='COUNT(id) AS num', where='user=$ids', limit='1', vars=locals())[0]
-			    cnt = sps.num
-			    if cnt == 1:
-				sp = db.select('pipes', what='pipe_in,pipe_out', where='user=$ids', limit='1', vars=locals())[0]
-				sp_in = sp.pipe_in
-				sp_out = sp.pipe_out
-				os.system("/sbin/ipfw -q table 0 add %(ip)s %(sp_out)d" % locals())
-				os.system("/sbin/ipfw -q table 1 add %(ip)s %(sp_out)d" % locals())
-			    else:
-				reconfig()
+		    raise Exception ('Error user id')
+	    except:
+		pass
 	    finally:
 		web.redirect("/users")
 
@@ -328,26 +301,11 @@ class UsersPage:
 	if not session.loggedin:
 	    web.redirect("/login?out=1")
 	else:
-	    if web.input().get('grp'):
-		ids = int(web.input().get('grp'))
-		if ids:
-		    users = db.select('users_full', where='groups=$ids', vars=locals())
-		else:
-		    users = db.select('users_full')
-	    else:
-		users = db.select('users_full')
-	    groups = db.select('users_grp')
+	    users = db.select('users_full')
 	    cnt = db.select('users', what='COUNT(id) AS num', vars=locals())[0]
-	    cnt = cnt.num
-	    cnt1 = db.select('users', what='COUNT(id) AS num', where="active='false'", vars=locals())[0]
-	    cnt1 = cnt1.num
-	    if cnt == cnt1:
-		trn = 22
-	    if cnt != cnt1:
-		trn = 33
 	    dt = datetime.datetime.now()
 	    hash = time.mktime(dt.timetuple())
-	    return render.main('Users list', render.usertable(users,groups,trn,hash,cnt), session)
+	    return render.main('Users list', render.usertable(users,hash,cnt.num), session)
 
 class EditUserPage:
     def show(self, input, error):
@@ -440,11 +398,10 @@ class RemoveUserPage:
 	    if userid:
 		try:
 		    user = db.select('users', what='ip', where='id=$userid', vars=locals())[0]
-		    ip = user.ip
 		    db.delete('users', where="id=$userid", vars=locals())
 		    db.delete('pipes', where='user=$userid', vars=locals())
-		    os.system("/sbin/ipfw -q table 0 delete %(ip)s" % locals())
-		    os.system("/sbin/ipfw -q table 1 delete %(ip)s" % locals())
+		    os.system("/sbin/ipfw -q table 0 delete %s" % user.ip)
+		    os.system("/sbin/ipfw -q table 1 delete %s" % user.ip)
 		finally:
 		    web.redirect('/')
 

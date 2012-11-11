@@ -1,13 +1,8 @@
-$def with (users, groups, trn, hash, cnt)
+$def with (users, hash, cnt)
 <table class="usertable">
 	<thead>
 		<tr>
-			<th>
-			$if trn == 33:
-			    <!--<a href="/activateuser?id=0&act=77&hash=$hash"><img src="/static/icons/deactivated.png" title="Set offline from all"></a>-->
-			$else:
-			    <!--<a href="/activateuser?id=0&act=88&hash=$hash"><img src="/static/icons/online.png" title="Set online from all"></a>-->
-			</th>
+			<th></th>
 			<td bgcolor="#D0DCE0"><tt><b><center>Real name</center></b></tt></td>
 			<td bgcolor="#D0DCE0"><tt><b><center>Group</center></b></tt></td>
 			<td bgcolor="#D0DCE0"><tt><b><center>IP address</center></b></tt></td>
