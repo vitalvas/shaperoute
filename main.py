@@ -37,7 +37,7 @@ if web.config.get('_session') is None:
 else:
     session = web.config._session
 
-db = web.database(dbn='mysql', db=DB_NAME, user=DB_USER, pw=DB_PASS, host=DB_HOST)
+db = web.database(dbn='mysql', db=config['database']['name'], user=config['database']['user'], pw=config['database']['passwd'], host=config['database']['host'])
 
 def pipe(num, speed):
     num = int(num)

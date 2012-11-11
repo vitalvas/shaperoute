@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 
-DB_HOST="localhost"
-DB_USER="root"
-DB_PASS=""
-DB_NAME="shaperoute"
-
 config={
+    "database": {
+	"host":"localhost",
+	"user":"root",
+	"passwd":"",
+	"name":"shaperoute"
+    },
     "arp": {
 	"enable":False,
 	"conf":"/usr/shaperoute/syscfg/arp.conf",
