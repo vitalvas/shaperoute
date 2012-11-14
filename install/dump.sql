@@ -16,24 +16,11 @@ CREATE TABLE `channels` (
   `gateway` varchar(20) COLLATE utf8_unicode_ci NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
-CREATE TABLE `networks` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `address` varchar(20) NOT NULL,
-  `comment` varchar(100) NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 CREATE TABLE `pipes` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `user` int(11) NOT NULL,
   `pipe_in` int(11) NOT NULL,
   `pipe_out` int(11) NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
-CREATE TABLE `sites` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `network` varchar(20) NOT NULL,
-  `comment` varchar(200) NOT NULL,
-  `status` enum('true','false') NOT NULL DEFAULT 'false',
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 CREATE TABLE `users` (
