@@ -1,4 +1,4 @@
-$def with (input, error, channel, grps, channels)
+$def with (input, error, channel, grps, channels, grps_nums)
 
 $if error:
     <p>Invalid input.</p>
@@ -12,15 +12,18 @@ $if error:
                             <INPUT name="id" value="$input.get('id')" type="hidden" />
                         <a href="/removeuser?id=$input.get('id')"><img src="/static/icons/user_delete.png" title="Remove user"/></a></td>
         </tr>
-        <tr>
-                <td align='right'>Location:</td>
-                <td><SELECT name="grps">
-                    $for b in grps:
-                        $if input.get('grps') == b.id or input.get('groups') == b.id:
-                            <OPTION selected value="$b.id">$b.name</OPTION>
-			$else:
-                            <OPTION value="$b.id">$b.name</OPTION>
-                    </SELECT>
+	$if grps_nums > 1:
+    	    <tr>
+	$else:
+	    <tr style="display:none;">
+        <td align='right'>Location:</td>
+        <td><SELECT name="grps">
+    		$for b in grps:
+                    $if input.get('grps') == b.id or input.get('groups') == b.id:
+                        <OPTION selected value="$b.id">$b.name</OPTION>
+		    $else:
+                        <OPTION value="$b.id">$b.name</OPTION>
+        </SELECT>
         </td>
         <tr>
                 <td align='right'>IP address:</td>
@@ -52,7 +55,7 @@ $if error:
                 <td align='right'>Channel:</td>
                 <td>
             	    $if channels > 1:
-                        <SELECT name="channel">
+                        <SELECT style="display:block;" name="channel">
                     $else:
                 	<SELECT style="display:none;" name="channel">
                     $for c in channel:
@@ -60,7 +63,7 @@ $if error:
                             <OPTION selected value="$c.id">$c.name</OPTION>
                         $else:
                             <OPTION value="$c.id">$c.name</OPTION>
-                        </SELECT><br/>
+                        </SELECT>
             	    <INPUT name="bw_down" value="$input.get('bw_down')" size="6"/>Kbit IN &darr; (0 - Unlim)<br/>
             	    <INPUT name="bw_up" value="$input.get('bw_up')" size="6"/>Kbit OUT &uarr; (0 - Unlim)
                 </td>

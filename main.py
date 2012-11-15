@@ -276,7 +276,9 @@ class AddUserPage:
 	else:
 	    channels = db.select('channels', what="id,name", where="active=true", vars=locals())
 	    grps = db.select('users_grp', what="id,name", where="active=true", vars=locals())
-	    return render.main(u'Add user', render.adduser(input, error, channels, grps),session)
+	    channels_nums = db.select('channels', what="count(*) as nums", where="active=true", vars=locals())[0]
+	    grps_nums = db.select('users_grp', what="count(*) as nums", where="active=true", vars=locals())[0]
+	    return render.main(u'Add user', render.adduser(input, error, channels, grps, channels_nums.nums, grps_nums.nums),session)
 
 
 class index:
@@ -314,10 +316,9 @@ class EditUserPage:
 	else:
 	    channels = db.select('channels', what='id,name', where="active=true", vars=locals())
 	    grps = db.select('users_grp', what='id,name', where="active=true", vars=locals())
-	    count_channels = db.query("SELECT COUNT(*) AS total FROM channels")[0]
-	    count_channels = count_channels.total
-	    userid = int(web.input().get("id"))
-	    return render.main('Edit user', render.edituser(input, error, channels, grps, count_channels), session)
+	    count_channels = db.select('channels', what='count(*) as total', vars=locals())[0]
+	    count_grps = db.select('users_grp', what='count(*) as total', vars=locals())[0]
+	    return render.main('Edit user', render.edituser(input, error, channels, grps, count_channels.total, count_grps.total), session)
 
     def GET(self):
 	if not session.loggedin:
