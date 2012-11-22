@@ -16,6 +16,7 @@ urls = (
 	'/stats', 'StatusPage',
 	'/users', 'UsersPage',
 	'/favicon.ico', 'Icon',
+	'/robots.txt', 'Robots',
 	'/activateuser', 'ActivatePage',
 	'/adduser', 'AddUserPage',
 	'/channels', 'ChannelsPage',
@@ -150,6 +151,11 @@ web.config.session_parameters['expired_message'] = render.exp_session()
 class Icon:
     def GET(self):
 	web.redirect('/static/icons/user.png')
+
+class Robots:
+    def GET(self):
+	return """User-agent: *
+Disallow: /"""
 
 class LoginPage:
     def GET(self):

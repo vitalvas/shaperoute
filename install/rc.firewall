@@ -19,8 +19,9 @@ do
 done
 
 ${f} add 200 deny icmp from any to any in icmptype 5,9,13,14,15,16,17
+${f} add 202 allow icmp from any to me
 
-#${f} add 250 fwd 127.0.0.1,9002 tcp from not "table(12)" to any in dst-port 80
+#${f} add 250 fwd 127.0.0.1,9002 tcp from not "table(0)" to any in dst-port 80
 
 for link in ${uplinks} lo0
 do
@@ -32,7 +33,6 @@ done
 ${f} add 6300 pipe tablearg ip from "table(0)" to any
 #${f} add 6390 deny ip from not "table(0)" to any
 # Shape Mir -> Users
-${f} add 6400 pipe tablearg ip from any to "table(0)"
-#${f} add 6490 deny ip from any to not "table(0)"
+${f} add 6400 pipe tablearg ip from any to "table(1)"
+#${f} add 6490 deny ip from any to not "table(1)"
 
-${f} add allow ip from any to any
